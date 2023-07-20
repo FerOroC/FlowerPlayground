@@ -116,6 +116,9 @@ class FedCustom(FedAvg):
         self.min_evaluate_clients = min_evaluate_clients
         self.min_available_clients = min_available_clients
 
+        #Change below to a hyperparam defined initialisation when strategy is defined*
+        self.client_hidden_params_conc = [np.zeros((20,6,14,14))] * min_fit_clients
+
     def __repr__(self) -> str:
         return "FedCustom"
 
