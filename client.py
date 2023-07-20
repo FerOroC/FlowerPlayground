@@ -1,9 +1,9 @@
 import flwr as fl
 
-from utils import get_parameters, set_parameters
 
 class FlowerClient(fl.client.NumPyClient):
     def __init__(self, cid, net, trainloader, valloader):
+        from utils import get_parameters, set_parameters
         self.cid = cid
         self.net = net
         self.trainloader = trainloader

@@ -17,8 +17,6 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate
 from flwr.server.strategy.fedavg import FedAvg
 
-from utils import get_parameters
-from model import Net
 
 class FedCustom(FedAvg):
     def __init__(
@@ -30,6 +28,8 @@ class FedCustom(FedAvg):
         min_available_clients: int = 2,
     ) -> None:
         super().__init__()
+        from utils import get_parameters
+        from model import Net
         self.fraction_fit = fraction_fit
         self.fraction_evaluate = fraction_evaluate
         self.min_fit_clients = min_fit_clients
