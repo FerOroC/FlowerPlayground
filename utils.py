@@ -5,7 +5,6 @@ import numpy as np
 import torch
 
 from model import Net
-from client import FlowerClient
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
 
