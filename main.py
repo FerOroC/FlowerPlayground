@@ -17,6 +17,11 @@ client_resources = None
 if DEVICE.type == "cuda":
     client_resources = {"num_gpus": 1}
 
+def client_fn(cid) -> FlowerClient:
+    net = Net().to(DEVICE)
+    trainloader = trainloaders[int(cid)]
+    valloader = valloaders[int(cid)]
+    return FlowerClient(cid, net, trainloader, valloader)
 
 def load_datasets(num_clients: int):
     # Download and transform CIFAR-10 (train and test)
