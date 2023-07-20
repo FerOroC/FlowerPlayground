@@ -185,6 +185,13 @@ class FedCustom(FedAvg):
         # Aggregate custom metrics if aggregation fn was provided
         metrics_aggregated = {}
 
+        hidden_params = [res.metrics for _, res in results]
+        hidden_params = merge_dicts(hidden_params)
+
+        self.client_hidden_params_conc = dict_to_np_array(hidden_params, self.client_hidden_params_conc)
+        for i in range(len(self.client_hidden_params_conc)):
+            print(f"Aggregate Fit Stage Output:\n[Client ID {i}]: Hidden Param Type {type(self.client_hidden_params_conc[i])} - With Shape {self.client_hidden_params_conc[i].shape}")
+
         return parameters_aggregated, metrics_aggregated
 
 
