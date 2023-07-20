@@ -6,6 +6,7 @@ from torchvision.datasets import CIFAR10
 
 import flwr as fl
 import pickle
+import numpy as np
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
 print(
