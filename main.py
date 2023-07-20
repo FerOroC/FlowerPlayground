@@ -4,7 +4,6 @@ from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import CIFAR10
 
 import flwr as fl
-from utils import client_fn
 from strategy import FedCustom
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
