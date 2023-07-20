@@ -12,8 +12,13 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
+        #Change 4 below to min_avail_clients as hyperparam feeding into model Change *
+        self.hidden = torch.Tensor()
+        self.other_client_params = [torch.zeros(20,6,14,14)] * 4
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.pool(F.relu(self.conv1(x)))
+        self.hidden = x
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 16 * 5 * 5)
         x = F.relu(self.fc1(x))
