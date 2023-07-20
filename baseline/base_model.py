@@ -42,6 +42,7 @@ def load_datasets(num_clients: int):
     testloader = DataLoader(testset, batch_size=32)
     return trainloaders, valloaders, testloader
 
+NUM_CLIENTS = 4
 
 trainloaders, valloaders, testloader = load_datasets(NUM_CLIENTS)
 
@@ -252,7 +253,7 @@ class FedCustom(fl.server.strategy.Strategy.FedAvg):
 
 fl.simulation.start_simulation(
     client_fn=client_fn,
-    num_clients=4,
+    num_clients=NUM_CLIENTS,
     config=fl.server.ServerConfig(num_rounds=25),
     strategy=FedCustom(),  # <-- pass the new strategy here
     client_resources=client_resources,
