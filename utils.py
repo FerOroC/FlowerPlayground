@@ -7,9 +7,10 @@ import torch
 from model import Net
 from client import FlowerClient
 
+DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
+
 def get_parameters(net) -> List[np.ndarray]:
     return [val.cpu().numpy() for _, val in net.state_dict().items()]
-
 
 def set_parameters(net, parameters: List[np.ndarray]):
     params_dict = zip(net.state_dict().keys(), parameters)
