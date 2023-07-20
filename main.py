@@ -6,6 +6,7 @@ from torchvision.datasets import CIFAR10
 import flwr as fl
 from strategy import FedCustom
 from client import FlowerClient
+from model import Net
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
 print(
