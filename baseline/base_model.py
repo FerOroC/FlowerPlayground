@@ -168,9 +168,10 @@ from flwr.common import (
 from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
+from flwr.server.strategy.fedavg import FedAvg
 
 
-class FedCustom(fl.server.strategy.Strategy.FedAvg):
+class FedCustom(FedAvg):
     def __init__(
         self,
         fraction_fit: float = 1.0,
