@@ -28,8 +28,6 @@ class FedCustom(FedAvg):
         min_available_clients: int = 2,
     ) -> None:
         super().__init__()
-        from utils import get_parameters
-        from model import Net
         self.fraction_fit = fraction_fit
         self.fraction_evaluate = fraction_evaluate
         self.min_fit_clients = min_fit_clients
@@ -43,6 +41,9 @@ class FedCustom(FedAvg):
         self, client_manager: ClientManager
     ) -> Optional[Parameters]:
         """Initialize global model parameters."""
+        from model import Net
+        from utils import get_parameters
+
         net = Net()
         ndarrays = get_parameters(net)
         return fl.common.ndarrays_to_parameters(ndarrays)
