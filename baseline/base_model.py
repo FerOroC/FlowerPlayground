@@ -16,8 +16,6 @@ print(
     f"Training on {DEVICE} using PyTorch {torch.__version__} and Flower {fl.__version__}"
 )
 
-NUM_CLIENTS = 10
-
 def load_datasets(num_clients: int):
     # Download and transform CIFAR-10 (train and test)
     transform = transforms.Compose(
@@ -171,7 +169,7 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
 
 
-class FedCustom(fl.server.strategy.Strategy):
+class FedCustom(fl.server.strategy.Strategy.FedAvg):
     def __init__(
         self,
         fraction_fit: float = 1.0,
@@ -201,7 +199,12 @@ class FedCustom(fl.server.strategy.Strategy):
     def configure_fit(
         self, server_round: int, parameters: Parameters, client_manager: ClientManager
     ) -> List[Tuple[ClientProxy, FitIns]]:
-        """Configure the next round of training."""
+        """Configure the next round of training.
+            Class inherits from FedAvg, same base code with few modifications"""
+        
+        # Empty config fpr base model case
+        config = {}
+        fit_ins = FitIns(parameters, config)
 
         # Sample clients
         sample_size, min_num_clients = self.num_fit_clients(
@@ -211,19 +214,13 @@ class FedCustom(fl.server.strategy.Strategy):
             num_clients=sample_size, min_num_clients=min_num_clients
         )
 
-        # Create custom configs
-        n_clients = len(clients)
-        half_clients = n_clients // 2
-        standard_config = {"lr": 0.001}
-        higher_lr_config = {"lr": 0.003}
         fit_configurations = []
+
         for idx, client in enumerate(clients):
-            if idx < half_clients:
-                fit_configurations.append((client, FitIns(parameters, standard_config)))
-            else:
-                fit_configurations.append(
-                    (client, FitIns(parameters, higher_lr_config))
-                )
+            fit_configurations.append(
+                (client, fit_ins)
+            )
+
         return fit_configurations
 
     def aggregate_fit(
@@ -302,8 +299,8 @@ class FedCustom(fl.server.strategy.Strategy):
     
 fl.simulation.start_simulation(
     client_fn=client_fn,
-    num_clients=2,
-    config=fl.server.ServerConfig(num_rounds=3),
+    num_clients=4,
+    config=fl.server.ServerConfig(num_rounds=25),
     strategy=FedCustom(),  # <-- pass the new strategy here
     client_resources=client_resources,
 )
