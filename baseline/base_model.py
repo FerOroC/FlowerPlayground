@@ -231,7 +231,7 @@ class FedCustom(fl.server.strategy.Strategy.FedAvg):
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
         """Aggregate fit results using weighted average."""
 
-                """Aggregate fit results using weighted average."""
+        """Aggregate fit results using weighted average."""
         if not results:
             return None, {}
         # Do not aggregate if there are failures and failures are not accepted
@@ -250,64 +250,6 @@ class FedCustom(fl.server.strategy.Strategy.FedAvg):
 
         return parameters_aggregated, metrics_aggregated
 
-    def configure_evaluate(
-        self, server_round: int, parameters: Parameters, client_manager: ClientManager
-    ) -> List[Tuple[ClientProxy, EvaluateIns]]:
-        """Configure the next round of evaluation."""
-        if self.fraction_evaluate == 0.0:
-            return []
-        config = {}
-        evaluate_ins = EvaluateIns(parameters, config)
-
-        # Sample clients
-        sample_size, min_num_clients = self.num_evaluation_clients(
-            client_manager.num_available()
-        )
-        clients = client_manager.sample(
-            num_clients=sample_size, min_num_clients=min_num_clients
-        )
-
-        # Return client/config pairs
-        return [(client, evaluate_ins) for client in clients]
-
-    def aggregate_evaluate(
-        self,
-        server_round: int,
-        results: List[Tuple[ClientProxy, EvaluateRes]],
-        failures: List[Union[Tuple[ClientProxy, EvaluateRes], BaseException]],
-    ) -> Tuple[Optional[float], Dict[str, Scalar]]:
-        """Aggregate evaluation losses using weighted average."""
-
-        if not results:
-            return None, {}
-
-        loss_aggregated = weighted_loss_avg(
-            [
-                (evaluate_res.num_examples, evaluate_res.loss)
-                for _, evaluate_res in results
-            ]
-        )
-        metrics_aggregated = {}
-        return loss_aggregated, metrics_aggregated
-
-    def evaluate(
-        self, server_round: int, parameters: Parameters
-    ) -> Optional[Tuple[float, Dict[str, Scalar]]]:
-        """Evaluate global model parameters using an evaluation function."""
-
-        # Let's assume we won't perform the global model evaluation on the server side.
-        return None
-
-    def num_fit_clients(self, num_available_clients: int) -> Tuple[int, int]:
-        """Return sample size and required number of clients."""
-        num_clients = int(num_available_clients * self.fraction_fit)
-        return max(num_clients, self.min_fit_clients), self.min_available_clients
-
-    def num_evaluation_clients(self, num_available_clients: int) -> Tuple[int, int]:
-        """Use a fraction of available clients for evaluation."""
-        num_clients = int(num_available_clients * self.fraction_evaluate)
-        return max(num_clients, self.min_evaluate_clients), self.min_available_clients
-    
 fl.simulation.start_simulation(
     client_fn=client_fn,
     num_clients=4,
