@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import CIFAR10
 
 import flwr as fl
+import pickle
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
 print(
@@ -75,3 +76,24 @@ def test(net, testloader):
     loss /= len(testloader.dataset)
     accuracy = correct / total
     return loss, accuracy
+
+def dict_to_np_array(dict, list):
+    for key, value in dict.items():
+        index = int(key)
+        new_value = bytes_str_to_nparray(value)
+        list[index] = new_value
+    return list
+
+def merge_dicts(list_of_dicts):
+    result_dict = {}
+    for dictionary in list_of_dicts:
+        result_dict.update(dictionary)
+    return result_dict
+
+def nparray_to_bytes_str(nparray: np.ndarray):
+    pickled = pickle.dumps(nparray)
+    return pickled
+
+def bytes_str_to_nparray(string: str):
+    unpickled = pickle.loads(string)
+    return unpickled
