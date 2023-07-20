@@ -137,8 +137,6 @@ class FedCustom(FedAvg):
             Class inherits from FedAvg, same base code with few modifications"""
         
         # Empty config fpr base model case
-        config = {}
-        fit_ins = FitIns(parameters, config)
 
         # Sample clients
         sample_size, min_num_clients = self.num_fit_clients(
@@ -149,10 +147,15 @@ class FedCustom(FedAvg):
         )
 
         fit_configurations = []
+        config = {}
+
+        for i in range(len(self.client_hidden_params_conc)):
+            serialised_param = nparray_to_bytes_str(self.client_hidden_params_conc[i])
+            config[i] = serialised_param
 
         for idx, client in enumerate(clients):
             fit_configurations.append(
-                (client, fit_ins)
+                (client, FitIns(parameters, config))
             )
 
         return fit_configurations
