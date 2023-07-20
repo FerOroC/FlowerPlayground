@@ -57,15 +57,30 @@ class FlowerClient(fl.client.NumPyClient):
         self.trainloader = trainloader
         self.valloader = valloader
 
+        self.clienthidden = np.array([])
+
     def get_parameters(self, config):
         print(f"[Client {self.cid}] get_parameters")
         return get_parameters(self.net)
 
     def fit(self, parameters, config):
         print(f"[Client {self.cid}] fit, config: {config}")
+
+        for key, value in config.items():
+            if type(key) == int:
+                temp_value = bytes_str_to_nparray(value)
+                temp_value = torch.from_numpy(temp_value).float().to(DEVICE)
+                self.net.other_client_params[key] = temp_value
+        print(f"[Client ID {self.cid}]")
+        print("Length of list of other client params var within net model: ", len(self.net.other_client_params))
+        for item in self.net.other_client_params:
+            print(f"Shape of each item in other client params var within net model: {item.shape}")
+
         set_parameters(self.net, parameters)
         train(self.net, self.trainloader, epochs=1)
-        return get_parameters(self.net), len(self.trainloader), {}
+        self.clienthidden = self.net.hidden.detach().cpu().numpy()
+        clienthiddenscalar = nparray_to_bytes_str(self.clienthidden)
+        return get_parameters(self.net), len(self.trainloader), {self.cid:clienthiddenscalar}
 
     def evaluate(self, parameters, config):
         print(f"[Client {self.cid}] evaluate, config: {config}")
