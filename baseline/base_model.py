@@ -231,12 +231,23 @@ class FedCustom(fl.server.strategy.Strategy.FedAvg):
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
         """Aggregate fit results using weighted average."""
 
+                """Aggregate fit results using weighted average."""
+        if not results:
+            return None, {}
+        # Do not aggregate if there are failures and failures are not accepted
+        if not self.accept_failures and failures:
+            return None, {}
+
+        # Convert results
         weights_results = [
             (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
             for _, fit_res in results
         ]
         parameters_aggregated = ndarrays_to_parameters(aggregate(weights_results))
+
+        # Aggregate custom metrics if aggregation fn was provided
         metrics_aggregated = {}
+
         return parameters_aggregated, metrics_aggregated
 
     def configure_evaluate(
