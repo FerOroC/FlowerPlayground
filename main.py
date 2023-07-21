@@ -200,6 +200,6 @@ fl.simulation.start_simulation(
     client_fn=client_fn,
     num_clients=NUM_CLIENTS,
     config=fl.server.ServerConfig(num_rounds=25),
-    strategy=FedCustom(),  # <-- pass the new strategy here
+    strategy=FedCustom(min_fit_clients=4),  # <-- pass the new strategy here
     client_resources=client_resources,
 )
