@@ -60,11 +60,11 @@ class FlowerClient(fl.client.NumPyClient):
         self.clienthidden = np.array([])
 
     def get_parameters(self, config):
-        print(f"[Client {self.cid}] get_parameters")
+        #print(f"[Client {self.cid}] get_parameters")
         return get_parameters(self.net)
 
     def fit(self, parameters, config):
-        print(f"[Client {self.cid}] fit, config: {config}")
+        #print(f"[Client {self.cid}] fit, config: {config}")
 
         for key, value in config.items():
             if type(key) == int:
@@ -187,7 +187,8 @@ class FedCustom(FedAvg):
 
         hidden_params = [res.metrics for _, res in results]
         hidden_params = merge_dicts(hidden_params)
-
+        print(f"Length of hidden params dict is {len(hidden_params)}")
+        print(f"Length of client hidden params list is {len(self.client_hidden_params_conc)}")
         self.client_hidden_params_conc = dict_to_np_array(hidden_params, self.client_hidden_params_conc)
         for i in range(len(self.client_hidden_params_conc)):
             print(f"Aggregate Fit Stage Output:\n[Client ID {i}]: Hidden Param Type {type(self.client_hidden_params_conc[i])} - With Shape {self.client_hidden_params_conc[i].shape}")
