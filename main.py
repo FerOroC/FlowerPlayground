@@ -30,7 +30,7 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
 from flwr.server.strategy.fedavg import FedAvg
 
-from utils import load_datasets, train, test
+from utils import load_datasets, train, test, dict_to_np_array, merge_dicts, nparray_to_bytes_str, bytes_str_to_nparray
 from models import Net
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
