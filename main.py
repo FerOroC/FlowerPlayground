@@ -71,10 +71,6 @@ class FlowerClient(fl.client.NumPyClient):
                 temp_value = bytes_str_to_nparray(value)
                 temp_value = torch.from_numpy(temp_value).float().to(DEVICE)
                 self.net.other_client_params[key] = temp_value
-        print(f"[Client ID {self.cid}]")
-        print("Length of list of other client params var within net model: ", len(self.net.other_client_params))
-        for item in self.net.other_client_params:
-            print(f"Shape of each item in other client params var within net model: {item.shape}")
 
         set_parameters(self.net, parameters)
         train(self.net, self.trainloader, epochs=1)
