@@ -29,6 +29,9 @@ from flwr.server.client_manager import ClientManager
 from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy.aggregate import aggregate, weighted_loss_avg
 from flwr.server.strategy.fedavg import FedAvg
+from flwr.common.logger import log
+from logging import WARNING
+from functools import reduce
 
 from utils import load_datasets, train, test, dict_to_np_array, merge_dicts, nparray_to_bytes_str, bytes_str_to_nparray
 from models import Net
@@ -127,7 +130,7 @@ class FedCustom(FedAvg):
         return fl.common.ndarrays_to_parameters(ndarrays)
 
     def configure_fit(
-        self, server_round: int, parameters: Parameters, client_manager: ClientManager
+        self, server_round: int, list_parameters: List[Parameters], client_manager: ClientManager
     ) -> List[Tuple[ClientProxy, FitIns]]:
         """Configure the next round of training.
             Class inherits from FedAvg, same base code with few modifications"""
@@ -150,33 +153,65 @@ class FedCustom(FedAvg):
             config[i] = serialised_param
 
         for idx, client in enumerate(clients):
+            print(f"IDX type is {type(idx)}, and val is {idx}.")
+            print(f"Client type is {type(client)}, and val is {client}")
             fit_configurations.append(
-                (client, FitIns(parameters, config))
+                (client, FitIns(list_parameters[idx], config))
             )
 
         return fit_configurations
 
+    def configure_evaluate(
+        self, server_round: int, list_parameters: List[Parameters], client_manager: ClientManager
+    ) -> List[Tuple[ClientProxy, EvaluateIns]]:
+        """Configure the next round of evaluation."""
+        # Do not configure federated evaluation if fraction eval is 0.
+        if self.fraction_evaluate == 0.0:
+            return []
+
+        # Parameters and config
+        config = {}
+        if self.on_evaluate_config_fn is not None:
+            # Custom evaluation config function provided
+            config = self.on_evaluate_config_fn(server_round)
+
+        # Sample clients
+        sample_size, min_num_clients = self.num_evaluation_clients(
+            client_manager.num_available()
+        )
+        clients = client_manager.sample(
+            num_clients=sample_size, min_num_clients=min_num_clients
+        )
+
+        eval_config = []
+        for client in clients:
+            evaluate_ins = EvaluateIns(list_parameters[client.cid], config)
+            eval_config.append((client, evaluate_ins))
+            print(f"For client ID: {client.cid}, eval model params = {list_parameters[client.cid][0]}")
+
+        print(f"check evaluate config method strategy, len eval config (should be num clients): {len(eval_config)}")
+        # Return client/config pairs
+        return eval_config
+    
     def aggregate_fit(
         self,
         server_round: int,
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List[Union[Tuple[ClientProxy, FitRes], BaseException]],
-    ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
+    ) -> List[Tuple[Optional[Parameters]], Dict[str, Scalar]]:
         """Aggregate fit results using weighted average."""
 
-        """Aggregate fit results using weighted average."""
         if not results:
             return None, {}
         # Do not aggregate if there are failures and failures are not accepted
         if not self.accept_failures and failures:
             return None, {}
-
-        # Convert results
-        weights_results = [
-            (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
-            for _, fit_res in results
-        ]
-        parameters_aggregated = ndarrays_to_parameters(aggregate(weights_results))
+        
+        #check if ndarrays to parameters functino is needed
+        print("length of results in strategy aggregate_fit input (should be num clients): ", len(results))
+        list_parameters = []*len(results)
+        for client_proxy, fit_res in results:
+            list_parameters[client_proxy.cid] = fit_res.parameters
 
         # Aggregate custom metrics if aggregation fn was provided
         metrics_aggregated = {}
@@ -189,8 +224,78 @@ class FedCustom(FedAvg):
         for i in range(len(self.client_hidden_params_conc)):
             print(f"Aggregate Fit Stage Output:\n[Client ID {i}]: Hidden Param Type {type(self.client_hidden_params_conc[i])} - With Shape {self.client_hidden_params_conc[i].shape}")
 
-        return parameters_aggregated, metrics_aggregated
+        return list_parameters, metrics_aggregated
+    
+    def aggregate_evaluate(
+        self,
+        server_round: int,
+        results: List[Tuple[ClientProxy, EvaluateRes]],
+        failures: List[Union[Tuple[ClientProxy, EvaluateRes], BaseException]],
+    ) -> Tuple[Optional[float], Dict[str, Scalar]]:
+        """Aggregate evaluation losses using weighted average."""
+        if not results:
+            return None, {}
+        # Do not aggregate if there are failures and failures are not accepted
+        if not self.accept_failures and failures:
+            return None, {}
 
+        # Aggregate loss
+        loss_aggregated = weighted_loss_avg(
+            [
+                (evaluate_res.num_examples, evaluate_res.loss)
+                for _, evaluate_res in results
+            ]
+        )
+
+        # Aggregate custom metrics if aggregation fn was provided
+        metrics_aggregated = {}
+        if self.evaluate_metrics_aggregation_fn:
+            eval_metrics = [(res.num_examples, res.metrics) for _, res in results]
+            metrics_aggregated = self.evaluate_metrics_aggregation_fn(eval_metrics)
+        elif server_round == 1:  # Only log this warning once
+            log(WARNING, "No evaluate_metrics_aggregation_fn provided")
+
+        return loss_aggregated, metrics_aggregated
+        
+    def aggregate(results: List[Tuple[NDArrays, int]]) -> NDArrays:
+        """Compute weighted average."""
+        # Calculate the total number of examples used during training
+        num_examples_total = sum([num_examples for _, num_examples in results])
+
+        # Create a list of weights, each multiplied by the related number of examples
+        weighted_weights = [
+            [layer * num_examples for layer in weights] for weights, num_examples in results
+        ]
+
+        # Compute average weights of each layer
+        weights_prime: NDArrays = [
+            reduce(np.add, layer_updates) / num_examples_total
+            for layer_updates in zip(*weighted_weights)
+        ]
+        return weights_prime
+    
+    def evaluate(
+        self, server_round: int, list_parameters: List[Parameters]
+    ) -> Optional[Tuple[float, Dict[str, Scalar]]]:
+        """Evaluate model parameters using an evaluation function."""
+        if self.evaluate_fn is None:
+            # No evaluation function provided
+            return None
+        
+        list_loss, list_metrics = []
+        for parameters in list_parameters:
+            parameters_ndarrays = parameters_to_ndarrays(parameters)
+            eval_res = self.evaluate_fn(server_round, parameters_ndarrays, {})
+            if eval_res is None:
+                return None
+            loss, metrics = eval_res
+            list_loss.append(loss)
+            list_metrics.append(metrics)
+
+        mean_loss = sum(list_loss)/len(list_loss)
+        mean_metrics = sum(list_metrics)/len(list_metrics)
+
+        return mean_loss, mean_metrics
 
 fl.simulation.start_simulation(
     client_fn=client_fn,
