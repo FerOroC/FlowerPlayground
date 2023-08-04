@@ -12,12 +12,11 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
-        nn.init.ones_(self.conv1)
-        nn.init.ones_(self.pool)
-        nn.init.ones_(self.conv2)
-        nn.init.ones_(self.fc1)
-        nn.init.ones_(self.fc2)
-        nn.init.ones_(self.fc3)
+        nn.init.ones_(self.conv1.weight)
+        nn.init.ones_(self.conv2.weight)
+        nn.init.ones_(self.fc1.weight)
+        nn.init.ones_(self.fc2.weight)
+        nn.init.ones_(self.fc3.weight)
         
         #Change 4 below to min_avail_clients as hyperparam feeding into model Change *
         self.hidden = torch.Tensor()
