@@ -198,7 +198,7 @@ class FedCustom(FedAvg):
         server_round: int,
         results: List[Tuple[ClientProxy, FitRes]],
         failures: List[Union[Tuple[ClientProxy, FitRes], BaseException]],
-    ) -> List[Tuple[Optional[Parameters]], Dict[str, Scalar]]:
+    ) -> Tuple[List[Optional[Parameters]], Dict[str, Scalar]]:
         """Aggregate fit results using weighted average."""
 
         if not results:
