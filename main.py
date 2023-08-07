@@ -51,6 +51,7 @@ def get_parameters(net) -> List[np.ndarray]:
 def set_parameters(net, parameters: List[np.ndarray]):
     params_dict = zip(net.state_dict().keys(), parameters)
     state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
+    print("State dict: ", state_dict)
     net.load_state_dict(state_dict, strict=True)
 
 class FlowerClient(fl.client.NumPyClient):
@@ -67,7 +68,7 @@ class FlowerClient(fl.client.NumPyClient):
         return get_parameters(self.net)
 
     def fit(self, parameters, config):
-        #print(f"[Client {self.cid}] fit, config: {config}")
+        print(f"[Client {self.cid}] fit, config: {config}")
 
         for key, value in config.items():
             if type(key) == int:
@@ -211,7 +212,7 @@ class FedCustom(FedAvg):
         print("length of results in strategy aggregate_fit input (should be num clients): ", len(results))
         list_parameters = []*len(results)
         for client_proxy, fit_res in results:
-            list_parameters[client_proxy.cid] = fit_res.parameters
+            list_parameters[int(client_proxy.cid)] = fit_res.parameters
 
         # Aggregate custom metrics if aggregation fn was provided
         metrics_aggregated = {}
