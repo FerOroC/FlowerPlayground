@@ -50,7 +50,7 @@ def get_parameters(net) -> List[np.ndarray]:
 
 def set_parameters(net, parameters: List[np.ndarray]):
     print("keys: ", net.state_dict().keys())
-    print("params: ", parameters)
+    print("params: ", len(parameters))
     params_dict = zip(net.state_dict().keys(), parameters)
     state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
     print("State dict: ", state_dict)
