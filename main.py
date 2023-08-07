@@ -156,18 +156,10 @@ class FedCustom(FedAvg):
             serialised_param = self.client_hidden_params_conc[i]
             config[i] = serialised_param
 
-        for idx, client in enumerate(clients):
-            print(f"IDX type is {type(idx)}, and val is {idx}.")
-            print(f"Client type is {type(client)}, and val is {client}")
-            print(f"Fit config for client")
-            #print(f"Parameters : {list_parameters[idx]}")
+        for client in clients:
             fit_configurations.append(
                 (client, FitIns(list_parameters[int(client.cid)], config)) #instead of idx maybe client.cid *
             )
-        # for client in clients:
-        #     fit_configurations.append(
-        #         (client, FitIns(list_parameters[int(client.cid)], config)) #instead of idx maybe client.cid *
-        #     )
 
         return fit_configurations
 
