@@ -162,8 +162,12 @@ class FedCustom(FedAvg):
             print(f"Fit config for client")
             #print(f"Parameters : {list_parameters[idx]}")
             fit_configurations.append(
-                (client, FitIns(list_parameters[idx], config))
+                (client, FitIns(list_parameters[int(client.cid)], config)) #instead of idx maybe client.cid *
             )
+        # for client in clients:
+        #     fit_configurations.append(
+        #         (client, FitIns(list_parameters[int(client.cid)], config)) #instead of idx maybe client.cid *
+        #     )
 
         return fit_configurations
 
