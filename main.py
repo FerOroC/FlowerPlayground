@@ -158,7 +158,7 @@ class FedCustom(FedAvg):
             print(f"IDX type is {type(idx)}, and val is {idx}.")
             print(f"Client type is {type(client)}, and val is {client}")
             print(f"Fit config for client")
-            print(f"Parameters : {list_parameters[idx]}")
+            #print(f"Parameters : {list_parameters[idx]}")
             fit_configurations.append(
                 (client, FitIns(list_parameters[idx], config))
             )
