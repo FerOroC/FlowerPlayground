@@ -68,7 +68,7 @@ class FlowerClient(fl.client.NumPyClient):
         return get_parameters(self.net)
 
     def fit(self, parameters, config):
-        print(f"[Client {self.cid}] fit, config: {config}")
+        print(f"[Client {self.cid}] fit")
 
         for key, value in config.items():
             if type(key) == int:
@@ -108,6 +108,7 @@ class FedCustom(FedAvg):
         min_fit_clients: int = 2,
         min_evaluate_clients: int = 2,
         min_available_clients: int = 2,
+        accept_failures: bool = False
     ) -> None:
         super().__init__()
         self.fraction_fit = fraction_fit
@@ -115,6 +116,7 @@ class FedCustom(FedAvg):
         self.min_fit_clients = min_fit_clients
         self.min_evaluate_clients = min_evaluate_clients
         self.min_available_clients = min_available_clients
+        self.accept_failures = accept_failures
 
         #Change below to a hyperparam defined initialisation when strategy is defined*
         self.client_hidden_params_conc = [np.zeros((20,6,14,14))] * min_fit_clients
