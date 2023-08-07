@@ -193,7 +193,6 @@ class FedCustom(FedAvg):
         for client in clients:
             evaluate_ins = EvaluateIns(list_parameters[int(client.cid)], config)
             eval_config.append((client, evaluate_ins))
-            print(f"For client ID: {client.cid}, eval model params = {list_parameters[int(client.cid)]}")
 
         print(f"check evaluate config method strategy, len eval config (should be num clients): {len(eval_config)}")
         # Return client/config pairs
