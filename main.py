@@ -49,6 +49,8 @@ def get_parameters(net) -> List[np.ndarray]:
     return [val.cpu().numpy() for _, val in net.state_dict().items()]
 
 def set_parameters(net, parameters: List[np.ndarray]):
+    print("keys: ", net.state_dict().keys())
+    print("params: ", parameters)
     params_dict = zip(net.state_dict().keys(), parameters)
     state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
     print("State dict: ", state_dict)
