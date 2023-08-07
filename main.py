@@ -215,7 +215,7 @@ class FedCustom(FedAvg):
         
         #check if ndarrays to parameters functino is needed
         print("length of results in strategy aggregate_fit input (should be num clients): ", len(results))
-        list_parameters = []*len(results)
+        list_parameters = [None]*len(results)
         print("length of list params (should be 4): ", len(list_parameters))
         for client_proxy, fit_res in results:
             print("index of client going into params list: ", int(client_proxy.cid))
