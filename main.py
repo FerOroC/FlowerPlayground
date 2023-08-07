@@ -33,7 +33,7 @@ from flwr.common.logger import log
 from logging import WARNING
 from functools import reduce
 
-from utils import load_datasets, train, test, dict_to_np_array, merge_dicts, nparray_to_bytes_str, bytes_str_to_nparray
+from utils import load_datasets, train, test, dict_to_np_array, merge_dicts
 from models import Net
 
 DEVICE = torch.device("cuda")  # Try "cuda" to train on GPU
@@ -72,14 +72,13 @@ class FlowerClient(fl.client.NumPyClient):
 
         for key, value in config.items():
             if type(key) == int:
-                temp_value = bytes_str_to_nparray(value)
-                temp_value = torch.from_numpy(temp_value).float().to(DEVICE)
+                temp_value = torch.from_numpy(value).float().to(DEVICE)
                 self.net.other_client_params[key] = temp_value
 
         set_parameters(self.net, parameters)
         train(self.net, self.trainloader, epochs=1)
         self.clienthidden = self.net.hidden.detach().cpu().numpy()
-        clienthiddenscalar = nparray_to_bytes_str(self.clienthidden)
+        clienthiddenscalar = self.clienthidden
         return get_parameters(self.net), len(self.trainloader), {self.cid:clienthiddenscalar}
 
     def evaluate(self, parameters, config):
@@ -152,12 +151,14 @@ class FedCustom(FedAvg):
         config = {}
 
         for i in range(len(self.client_hidden_params_conc)):
-            serialised_param = nparray_to_bytes_str(self.client_hidden_params_conc[i])
+            serialised_param = self.client_hidden_params_conc[i]
             config[i] = serialised_param
 
         for idx, client in enumerate(clients):
             print(f"IDX type is {type(idx)}, and val is {idx}.")
             print(f"Client type is {type(client)}, and val is {client}")
+            print(f"Fit config for client")
+            print(f"Parameters : {list_parameters[idx]}")
             fit_configurations.append(
                 (client, FitIns(list_parameters[idx], config))
             )
@@ -188,7 +189,7 @@ class FedCustom(FedAvg):
 
         eval_config = []
         for client in clients:
-            evaluate_ins = EvaluateIns(list_parameters[client.cid], config)
+            evaluate_ins = EvaluateIns(int(list_parameters[client.cid]), config)
             eval_config.append((client, evaluate_ins))
             print(f"For client ID: {client.cid}, eval model params = {list_parameters[client.cid][0]}")
 
